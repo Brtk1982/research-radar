@@ -15,14 +15,14 @@ RESEND_API_KEY = os.getenv("RESEND_API_KEY", "your-resend-key-here")
 
 # --- EMAIL SETTINGS ---
 # The "from" address for your weekly digest
-FROM_EMAIL = "Research Radar <digest@yourdomainhere.com>"
+FROM_EMAIL = "Research Radar <wartek69@gmail.com>"
 FROM_NAME = "Research Radar"
 
 # --- YOUR SUBSCRIBER LIST ---
 # Add email addresses of your subscribers here.
 # Later we'll connect this to a proper database, but this works to start.
 SUBSCRIBERS = [
-    "subscriber1@example.com",
+    "wartek69@gmail.com",
     # Add more emails below this line, same format
 ]
 

@@ -2,6 +2,6 @@
 builder = "NIXPACKS"
 
 [deploy]
-startCommand = "python research_radar.py"
+startCommand = "python research_radar.py send"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3

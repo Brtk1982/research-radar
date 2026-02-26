@@ -15,7 +15,7 @@ RESEND_API_KEY = os.getenv("RESEND_API_KEY", "your-resend-key-here")
 
 # --- EMAIL SETTINGS ---
 # The "from" address for your weekly digest
-FROM_EMAIL = "Research Radar <onboarding@resend.dev>"
+FROM_EMAIL = "Research Radar <radar@vita.arcanaveritas.io>"
 FROM_NAME = "Research Radar"
 
 # --- YOUR SUBSCRIBER LIST ---

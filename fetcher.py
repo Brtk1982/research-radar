@@ -23,7 +23,7 @@ def fetch_arxiv_papers(topic: str, max_results: int = 3) -> list[dict]:
     # Build the web address we're searching (like typing into a search bar)
     base_url = "http://export.arxiv.org/api/query"
     params = {
-        "search_query": f"all:{topic} AND (cat:q-bio OR cat:cs.AI OR cat:stat.ML)",
+        "search_query": f"all:{topic} AND (cat:cs.AI OR cat:cs.LG OR cat:cs.CL OR cat:cs.CV)",
         "start": 0,
         "max_results": max_results,
         "sortBy": "submittedDate",
@@ -71,107 +71,6 @@ def fetch_arxiv_papers(topic: str, max_results: int = 3) -> list[dict]:
         return []
 
 
-def fetch_pubmed_papers(topic: str, max_results: int = 3) -> list[dict]:
-    """
-    Fetches papers from PubMed — the world's biggest medical research library.
-    Run by the US National Library of Medicine. Completely free.
-    """
-    print(f"  📡 PubMed: searching for '{topic}'...")
-
-    # Step 1: Search for paper IDs
-    search_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
-    search_params = {
-        "db": "pubmed",
-        "term": f"{topic}[Title/Abstract] AND (\"last 30 days\"[PDat])",
-        "retmax": max_results,
-        "sort": "pub+date",
-        "retmode": "json",
-    }
-
-    try:
-        search_response = requests.get(search_url, params=search_params, timeout=15)
-        search_response.raise_for_status()
-        search_data = search_response.json()
-
-        ids = search_data.get("esearchresult", {}).get("idlist", [])
-        if not ids:
-            print(f"     ℹ️  No recent PubMed papers for '{topic}'")
-            return []
-
-        # Step 2: Fetch details for those paper IDs
-        fetch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
-        fetch_params = {
-            "db": "pubmed",
-            "id": ",".join(ids),
-            "retmode": "xml",
-        }
-
-        # Be polite to PubMed's servers — wait a moment between requests
-        time.sleep(0.5)
-
-        fetch_response = requests.get(fetch_url, params=fetch_params, timeout=15)
-        fetch_response.raise_for_status()
-
-        root = ET.fromstring(fetch_response.content)
-        papers = []
-
-        for article in root.findall(".//PubmedArticle"):
-            # Get the title
-            title_elem = article.find(".//ArticleTitle")
-            title = title_elem.text if title_elem is not None else "No title"
-
-            # Get the abstract (summary of the paper)
-            abstract_texts = article.findall(".//AbstractText")
-            abstract = " ".join([
-                (t.text or "") for t in abstract_texts
-            ]).strip()
-
-            if not abstract:
-                continue  # Skip papers with no abstract — not useful for us
-
-            # Get the authors
-            authors = []
-            for author in article.findall(".//Author")[:3]:
-                last = author.find("LastName")
-                first = author.find("ForeName")
-                if last is not None:
-                    name = last.text
-                    if first is not None:
-                        name = f"{first.text} {name}"
-                    authors.append(name)
-
-            # Get the publication date
-            pub_date = article.find(".//PubDate")
-            year = pub_date.find("Year") if pub_date is not None else None
-            month = pub_date.find("Month") if pub_date is not None else None
-            date_str = ""
-            if year is not None:
-                date_str = year.text
-                if month is not None:
-                    date_str = f"{date_str}-{month.text}"
-
-            # Get the PubMed link
-            pmid = article.find(".//PMID")
-            url = f"https://pubmed.ncbi.nlm.nih.gov/{pmid.text}/" if pmid is not None else ""
-
-            papers.append({
-                "title": str(title).replace("\n", " "),
-                "abstract": abstract[:2000],  # Cap at 2000 chars to save AI costs
-                "authors": authors,
-                "published": date_str,
-                "url": url,
-                "source": "PubMed",
-                "topic": topic,
-            })
-
-        print(f"     ✅ Found {len(papers)} papers")
-        return papers
-
-    except Exception as e:
-        print(f"     ⚠️  PubMed error for '{topic}': {e}")
-        return []
-
-
 def fetch_all_papers() -> list[dict]:
     """
     The main function — runs through all our topics and fetches papers
@@ -188,9 +87,8 @@ def fetch_all_papers() -> list[dict]:
 
         # Fetch from both sources
         arxiv_papers = fetch_arxiv_papers(topic, PAPERS_PER_TOPIC)
-        time.sleep(1)  # Be polite, don't hammer the servers
-        pubmed_papers = fetch_pubmed_papers(topic, PAPERS_PER_TOPIC)
         time.sleep(1)
+        pubmed_papers = []
 
         # Combine and deduplicate
         for paper in arxiv_papers + pubmed_papers:

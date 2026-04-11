@@ -9,7 +9,8 @@ import os
 # --- YOUR API KEYS ---
 # Get these from the websites mentioned in setup.
 # Never share this file with anyone!
-
+from dotenv import load_dotenv
+load_dotenv()
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "your-anthropic-key-here")
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "your-resend-key-here")
 
@@ -30,16 +31,16 @@ SUBSCRIBERS = [
 # These are the search terms we use to find longevity papers.
 # Think of these as the words we type into the academic search engine.
 SEARCH_TOPICS = [
-    "longevity",
-    "aging reversal",
-    "senolytics",
-    "telomere extension",
-    "NAD+ metabolism",
-    "epigenetic reprogramming",
-    "mTOR inhibition aging",
-    "autophagy aging",
-    "healthspan extension",
-    "lifespan biomarkers",
+    "large language model",
+    "AI agent",
+    "diffusion model",
+    "reinforcement learning from human feedback",
+    "multimodal AI",
+    "AI code generation",
+    "small language model",
+    "AI reasoning",
+    "neural architecture search",
+    "open source AI tools",
 ]
 
 # --- HOW MANY PAPERS TO FETCH ---
@@ -54,5 +55,5 @@ PAPERS_PER_TOPIC = 3
 MIN_SCORE = 7
 
 # --- DIGEST SETTINGS ---
-DIGEST_SUBJECT = "Research Radar: This Week's Longevity Opportunities 🧬"
+DIGEST_SUBJECT = "Research Radar: This Week in AI 🤖"
 MAX_PAPERS_IN_DIGEST = 5  # Maximum papers per weekly email

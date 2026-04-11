@@ -25,28 +25,30 @@ def score_paper(paper: dict) -> dict:
     Returns the paper with a score and reasoning added.
     """
 
-    prompt = f"""You are a longevity biotech analyst advising venture capital investors.
-    
-Evaluate this academic paper for COMMERCIAL POTENTIAL. Be ruthlessly selective.
+    prompt = f"""You are my personal AI research filter. From everything you see, surface ONLY what meets these bars:
 
-PAPER:
+1. "Actually New" — novel research directions, new architectures, first-of-kind approaches. Must show hard evidence or genuine buzz. NOT incremental improvements on known methods.
+2. "Solo-Buildable" — projects one person built, or techniques a solo developer could realistically implement. Cite the builder by name if known. Must show real traction: GitHub stars, users, community response.
+3. "Fringe/Weird" — unconventional, strange, possibly impractical but genuinely original. Low metrics are fine here — originality beats popularity. The stuff nobody else is covering yet.
+
+REJECT without mercy: incremental updates, big company PR, papers without code, anything requiring team-scale resources, anything already mainstream or widely covered.
+
+NOVELTY TEST: Ask yourself — would a well-read AI practitioner already know this? If yes, reject it.
+
+ITEM:
 Title: {paper['title']}
 Abstract: {paper['abstract']}
 Source: {paper['source']}
 
-Score this paper from 1-10 on commercial potential using these criteria:
-- 8-10: Breakthrough finding with clear near-term product pathway, large market
-- 6-7: Interesting finding, possible commercial angle but less direct
-- 4-5: Scientifically valid but limited commercial relevance
-- 1-3: Purely academic, no commercial angle
+Score this item from 1-10 using the bars above. Be ruthlessly selective.
 
 Respond ONLY with valid JSON in this exact format:
 {{
   "score": <number 1-10>,
-  "commercial_angle": "<one sentence on what the product/application could be>",
-  "target_market": "<who would pay for this>",
-  "urgency": "<why now — what makes this timely>",
-  "flag": "<breakthrough|incremental|basic_science>"
+  "commercial_angle": "<one sentence on what makes this genuinely interesting or important>",
+  "target_market": "<what field or problem does this touch>",
+  "urgency": "<why is this worth paying attention to now>",
+  "flag": "<breakthrough|interesting|incremental>"
 }}"""
 
     try:
@@ -86,37 +88,32 @@ def write_investor_brief(paper: dict) -> str:
     our subscribers receive.
     """
 
-    prompt = f"""You are writing for Research Radar, a premium intelligence digest read by longevity-focused VCs and angel investors. 
+    prompt = f"""You are my personal AI research filter writing a weekly digest. Your reader is a solo builder who wants to know about the coolest new things happening in AI — tools, projects, research, and solo builds worth paying attention to. He builds things. He doesn't care about theory for its own sake.
 
-Write a sharp, insightful opportunity brief for this paper. Your readers are smart, time-poor investors who need signal, not noise.
-
-PAPER DATA:
+ITEM DATA:
 Title: {paper['title']}
-Abstract: {paper['abstract']}
-Authors: {', '.join(paper.get('authors', []))}
+Description: {paper['abstract']}
+Builders: {', '.join(paper.get('authors', []))}
 Published: {paper.get('published', 'Recent')}
 Source: {paper['source']}
-Commercial Angle: {paper['commercial_angle']}
-Target Market: {paper['target_market']}
-Urgency: {paper['urgency']}
+Why interesting: {paper['commercial_angle']}
+Field/problem: {paper['target_market']}
+Why now: {paper['urgency']}
 
 Write the brief in this EXACT structure (use these exact headers):
 
-**THE FINDING**
-[2-3 sentences. What did they discover? Write as if explaining to a smart non-scientist. No jargon.]
+**WHAT IT IS**
+[2-3 sentences. What did someone build, ship, or discover? Plain language. What does it actually do or show?]
 
-**WHY IT MATTERS COMMERCIALLY**
-[2-3 sentences. What product or service could this enable? What industry does it disrupt or create?]
+**WHY IT'S INTERESTING**
+[2-3 sentences. What's genuinely new or surprising? What does it change or make possible?]
 
-**THE OPPORTUNITY WINDOW**
-[1-2 sentences. Why is now the time? What's the competitive landscape?]
-
-**WHO'S WATCHING**
-[1-2 sentences. Which type of investors or corporates should pay attention?]
+**WORTH WATCHING BECAUSE**
+[1-2 sentences. What's the signal — traction, novelty, strangeness — that makes this stand out from the noise?]
 
 **SIGNAL STRENGTH:** {paper['flag'].upper().replace('_', ' ')} | Score: {paper['score']}/10
 
-Keep the entire brief under 250 words. Be direct. No fluff. Sound like an insider, not a press release."""
+Keep the entire brief under 200 words. Write like you're telling a builder friend about something cool you found. Honest and direct — if it's only mildly interesting, say so."""
 
     try:
         message = client.messages.create(

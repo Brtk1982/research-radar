@@ -43,7 +43,7 @@ def build_email_html(papers: list[dict]) -> str:
     <!-- MASTHEAD -->
     <div style="border-bottom:1px solid #333; padding-bottom:30px; margin-bottom:40px;">
       <div style="font-size:11px; letter-spacing:3px; color:#888; text-transform:uppercase; margin-bottom:12px;">
-        Longevity Intelligence
+        AI Intelligence
       </div>
       <h1 style="margin:0; font-size:32px; font-weight:normal; color:#ffffff; letter-spacing:-0.5px;">
         Research Radar
@@ -56,9 +56,9 @@ def build_email_html(papers: list[dict]) -> str:
     <!-- INTRO -->
     <div style="margin-bottom:40px; padding:20px; background:#1a1a1a; border-left:3px solid #4a9eff; border-radius:4px;">
       <p style="margin:0; font-size:15px; line-height:1.6; color:#bbb; font-style:italic;">
-        This week's radar swept <strong style="color:#e8e8e8;">arXiv and PubMed</strong> for longevity breakthroughs 
-        with commercial potential. Only papers scoring 7/10 or higher on our commercial viability index 
-        made the cut.
+        This week's radar swept <strong style="color:#e8e8e8;">arXiv and the wider AI field</strong> for 
+        genuinely new tools, solo projects with traction, and fringe research worth knowing about. 
+        Only items scoring 7/10 or higher on novelty and interest made the cut.
       </p>
     </div>
     """
@@ -128,8 +128,8 @@ def build_email_html(papers: list[dict]) -> str:
     <!-- FOOTER -->
     <div style="padding-top:20px; border-top:1px solid #222; text-align:center;">
       <p style="font-size:12px; color:#444; line-height:1.6; margin:0 0 10px 0;">
-        Research Radar is an AI-powered longevity intelligence digest.<br>
-        Papers are scored and summarised automatically. Not financial advice.
+        Research Radar is a personal AI intelligence digest.<br>
+        Items are scored and summarised automatically. Delivered every Monday.
       </p>
       <p style="font-size:11px; color:#333; margin:0;">
         You're receiving this because you subscribed to Research Radar.<br>

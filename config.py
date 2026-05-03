@@ -52,7 +52,7 @@ PAPERS_PER_TOPIC = 3
 # Papers get scored 1-10 for commercial potential.
 # Only papers scoring ABOVE this number make it into the digest.
 # 7 = high bar (fewer papers, higher quality)
-MIN_SCORE = 7
+MIN_SCORE = 6
 
 # --- DIGEST SETTINGS ---
 DIGEST_SUBJECT = "Research Radar: This Week in AI 🤖"

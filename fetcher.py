@@ -1,8 +1,7 @@
 # ============================================================
 # MODULE 1: PAPER FETCHER
-# This is the "librarian robot". It goes to two giant free
-# academic libraries (arXiv and PubMed) and grabs fresh
-# longevity research papers every day.
+# Fetches recent AI/ML content from arXiv, GitHub Trending,
+# and Hugging Face Spaces.
 # ============================================================
 
 import requests
@@ -71,10 +70,109 @@ def fetch_arxiv_papers(topic: str, max_results: int = 3) -> list[dict]:
         return []
 
 
+def fetch_github_trending(topic: str, max_results: int = 3) -> list[dict]:
+    """
+    Fetches recently created AI/ML repositories from GitHub Search API,
+    filtered to repos created in the last 7 days and sorted by stars.
+    Uses unauthenticated API (60 req/hr limit — fine for weekly runs).
+    """
+    print(f"  📡 GitHub: searching for '{topic}'...")
+
+    since = (datetime.utcnow() - timedelta(days=7)).strftime("%Y-%m-%d")
+    query = f"{topic} in:name,description,topics created:>{since} stars:>1"
+
+    url = "https://api.github.com/search/repositories"
+    params = {
+        "q": query,
+        "sort": "stars",
+        "order": "desc",
+        "per_page": max_results,
+    }
+    headers = {"Accept": "application/vnd.github+json"}
+
+    try:
+        response = requests.get(url, params=params, headers=headers, timeout=15)
+        response.raise_for_status()
+        data = response.json()
+
+        papers = []
+        for repo in data.get("items", [])[:max_results]:
+            papers.append({
+                "title": repo["full_name"],
+                "abstract": repo.get("description") or "No description provided.",
+                "authors": [repo["owner"]["login"]],
+                "published": repo["created_at"][:10],
+                "url": repo["html_url"],
+                "source": "GitHub",
+                "topic": topic,
+            })
+
+        print(f"     ✅ Found {len(papers)} repos")
+        return papers
+
+    except Exception as e:
+        print(f"     ⚠️  GitHub error for '{topic}': {e}")
+        return []
+
+
+def fetch_huggingface_spaces(max_results: int = 5) -> list[dict]:
+    """
+    Fetches popular Hugging Face Spaces from the public HF API.
+    Not topic-specific — returns the globally top spaces.
+    Tries sort=likes first, falls back to sort=createdAt.
+    """
+    print(f"  📡 Hugging Face: fetching trending spaces...")
+
+    url = "https://huggingface.co/api/spaces"
+    base_params = {"limit": max_results, "full": "true"}
+
+    spaces = None
+    for sort_value in ("createdAt", "likes"):
+        try:
+            response = requests.get(url, params={**base_params, "sort": sort_value}, timeout=15)
+            response.raise_for_status()
+            spaces = response.json()
+            break
+        except Exception:
+            continue
+
+    if spaces is None:
+        print(f"     ⚠️  Hugging Face error: all sort strategies failed")
+        return []
+
+    papers = []
+    for space in spaces[:max_results]:
+        space_id = space.get("id", "")
+        card = space.get("cardData") or {}
+        tags = space.get("tags") or []
+
+        description = (
+            card.get("short_description")
+            or card.get("title")
+            or (", ".join(tags[:5]) if tags else "No description.")
+        )
+
+        author = space_id.split("/")[0] if "/" in space_id else space_id
+        created = (space.get("createdAt") or "")[:10] or datetime.utcnow().strftime("%Y-%m-%d")
+
+        papers.append({
+            "title": space_id,
+            "abstract": description,
+            "authors": [author],
+            "published": created,
+            "url": f"https://huggingface.co/spaces/{space_id}",
+            "source": "Hugging Face",
+            "topic": "AI Tools",
+        })
+
+    print(f"     ✅ Found {len(papers)} spaces")
+    return papers
+
+
 def fetch_all_papers() -> list[dict]:
     """
-    The main function — runs through all our topics and fetches papers
-    from both libraries. This is the robot's daily morning routine.
+    The main function — runs through all topics fetching from arXiv and GitHub,
+    then appends trending Hugging Face Spaces (fetched once, not per topic).
     """
     print("\n🔍 STEP 1: FETCHING PAPERS")
     print("=" * 50)
@@ -85,18 +183,24 @@ def fetch_all_papers() -> list[dict]:
     for topic in SEARCH_TOPICS:
         print(f"\n📚 Topic: {topic}")
 
-        # Fetch from both sources
         arxiv_papers = fetch_arxiv_papers(topic, PAPERS_PER_TOPIC)
         time.sleep(1)
-        pubmed_papers = []
+        github_papers = fetch_github_trending(topic, PAPERS_PER_TOPIC)
+        time.sleep(6)
 
-        # Combine and deduplicate
-        for paper in arxiv_papers + pubmed_papers:
-            # Clean up the title for comparison
+        for paper in arxiv_papers + github_papers:
             clean_title = paper["title"].lower()[:50]
             if clean_title not in seen_titles:
                 seen_titles.add(clean_title)
                 all_papers.append(paper)
+
+    print(f"\n📚 Hugging Face Spaces (trending)")
+    hf_papers = fetch_huggingface_spaces(PAPERS_PER_TOPIC)
+    for paper in hf_papers:
+        clean_title = paper["title"].lower()[:50]
+        if clean_title not in seen_titles:
+            seen_titles.add(clean_title)
+            all_papers.append(paper)
 
     print(f"\n✅ Total unique papers fetched: {len(all_papers)}")
     return all_papers
